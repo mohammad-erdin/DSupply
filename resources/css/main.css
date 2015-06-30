@@ -1,0 +1,29 @@
+#header {
+	color: #596F8F;
+	font-size: 22px;
+	font-weight: 200;
+	text-shadow: 0 1px 0 #fff;
+}
+.hidden {
+	display: none;
+	visibility: hidden;
+}
+.action-panel li{
+	margin: 3px 3px 3px 3px;
+}
+.action-panel li a {
+	color:#3764A0;
+	text-decoration:none;
+	font-size: 11px;
+}
+.action-panel li img {
+	height:16px;
+	margin-bottom:2px;
+	margin-right:2px;
+	vertical-align:middle;
+	width:16px;
+}
+.red-grid{
+	color:red;
+	background-color: orange !important;
+}

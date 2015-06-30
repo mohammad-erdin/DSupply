@@ -1,0 +1,183 @@
+Ext.define("App.window.account",{
+	extend:'Ext.util.Observable',
+	mainContent:null,
+	constructor:function(c){
+		this.callParent([c]);
+		this.initComponent();
+	},
+	initComponent:function(){
+		var me=this;
+		me.fmEdit=Ext.create("Ext.form.Panel",{
+			border:false,
+			layout:"fit",
+			autoWidth:true,
+			autoHeight:true,
+			url:"controller/user/update",
+			defaults:{bodyStyle:"background-color:#DFE8F6"},
+			items:[{
+				xtype:"tabpanel",
+				defaults:{bodyStyle:"background-color:#DFE8F6"},
+				items:[{
+					title:'General',
+					padding:5,
+					border:false,
+					defaults:{
+						margin:3,
+						labelWidth:120,
+						labelSeparator:"",
+						msgTarget:"side",
+						width:300,
+						xtype:"textfield",
+						allowBlank:false
+					},
+					items:[{
+						name:"username",
+						submitValue:false,
+						itemId:"username",
+						fieldLabel:"Username",
+						readOnly:true,
+						value:"",
+						fieldStyle:{
+							backgroundColor:"#ffff99",
+							backgroundImage:"none",
+							fontStyle:"italic"
+						}
+					},{
+						name:"nama_lengkap",
+						fieldLabel:"Nama Lengkap"
+					},{
+						name:"email",
+						fieldLabel:"Email",
+						vtype:"email"
+					},{
+						name:"telp",
+						fieldLabel:"Telp"
+					},{
+						xtype:"hidden",
+						name:"member_id"
+					}]
+				},{
+					title:"Password",
+					padding:5,
+					border:false,
+					defaults:{
+						margin:3,
+						labelWidth:120,
+						labelSeparator:"",
+						msgTarget:"side",
+						width:300,
+						allowBlank:false,
+						xtype:"textfield"
+					},
+					items:[{
+						xtype:"checkbox",
+						fieldLabel:"Ganti Password",
+						name:"ISCHANGE",
+						inputValue:true,
+						checked:false,
+						boxLabel:"Ya",
+						scope:me,
+						handler:me.onChangePassword
+					},{
+						disabled:true,
+						name:"old_password",
+						itemId:"old-password",
+						fieldLabel:"Password Lama",
+						inputType:"password"
+					},{
+						disabled:true,
+						name:"password-1",
+						itemId:"password-1",
+						fieldLabel:"Password Baru",
+						inputType:"password"
+					},{
+						disabled:true,
+						name:"password-2",
+						itemId:"password-2",
+						fieldLabel:"Ulangi Password",
+						inputType:"password"
+					}]
+				}]
+			}]
+		});
+		me.Main=Ext.create("Ext.Window",{
+			title:_text("updateUser"),
+			autoWidth:true,
+			border:false,
+			autoHeight:true,
+			closable:false,
+			modal:true,
+			closeAction:"hide",
+			items:[me.fmEdit],
+			buttons:[{
+				text:"Save",
+				scope:me,
+				handler:me.onSave
+			},{
+				text:"Cancel",
+				scope:me,
+				handler:me.onCancel
+			}]
+		});
+	},
+	show:function(){
+		var me=this;
+		Ext.Ajax.request({
+			url:"controller/user/getdata",
+			scope:me,
+			success:function(a){
+				var data=Ext.decode(a.responseText);
+				me.fmEdit.getForm().setValues(data.data);
+				me.Main.show();
+			},
+			failure:App.Utils.handleError
+		});
+	},
+	onSave:function(){
+		var m=this,form=m.fmEdit.getForm();
+		m.fmEdit.getForm().submit({
+			scope:m,
+			success:function(){
+				m.fmEdit.getForm().reset();
+				m.Main.close();
+			},
+			failure:function(a,b){
+				if (b.failureType=="server" && b.result.errors){
+					Ext.each(b.result.errors,function(c){
+						m.getFmItem(c).markInvalid(_text("invalid-"+c));
+					},m);
+				}
+				Ext.Msg.alert("Error","Tidak dapat melakukan penyimpanan.<br>Mohon periksa kembali semua field.");
+			}
+		});
+	},
+	onCancel:function(){
+		var me=this,
+			op=me.getFmItem("old-password"),
+			p1=me.getFmItem("password-1"),
+			p2=me.getFmItem("password-2");
+		me.fmEdit.getForm().reset();
+		op.disable();
+		p1.disable();
+		p2.disable();
+		me.Main.hide();
+	},
+	getFmItem:function(a){
+		var m=this,tp=m.fmEdit.down("tabpanel"),
+		ret=tp.getComponent(0).getComponent(a)||null;
+		ret=(Ext.isEmpty(ret))?tp.getComponent(1).getComponent(a):ret;
+		return ret;
+	},
+	onChangePassword:function(a,b){
+		var me=this,
+			op=me.getFmItem("old-password"),
+			p1=me.getFmItem("password-1"),
+			p2=me.getFmItem("password-2");
+		op.setDisabled(!b);p1.setDisabled(!b);p2.setDisabled(!b);
+		if (!b){
+			op.clearInvalid();
+			p1.clearInvalid();
+			p2.clearInvalid();
+		}
+	}
+});
